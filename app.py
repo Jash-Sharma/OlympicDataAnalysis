@@ -133,7 +133,7 @@ if user_menu == "Country-wise Analysis":
     st.title(s_country + " excels in the following sports")
     pt = helper.country_event_heatmap(df,s_country)
     fig, ax = plt.subplots(figsize=(20, 20))
-    ax = sns.heatmap(pt,annot=True)
+    sns.heatmap(pt,annot=True)
     st.pyplot(fig)
 
     st.title("Top 10 athletes of " + s_country)
