@@ -73,3 +73,31 @@ def most_successful_countrywise(df, country):
         ['Name', 'Sport']].drop_duplicates('Name')
     x.rename(columns={'index': 'Name', 'Name_x': 'Medals'}, inplace=True)
     return x
+
+def weight_v_height(df,sport,sex):
+    athlete_df = df.drop_duplicates(subset=['Name', 'region'])
+    athlete_df['Medal'].fillna('No Medal', inplace=True)
+    if sport != 'Overall' and sex != 'All':
+        temp_df = athlete_df[(athlete_df['Sport'] == sport) & (athlete_df['Sex'] == sex)]
+        return temp_df
+    if sport == 'Overall' and sex != 'All':
+        temp_df = athlete_df[athlete_df['Sex'] == sex]
+        return temp_df
+    if sport != 'Overall' and sex == 'All':
+        temp_df = athlete_df[athlete_df['Sport'] == sport]
+        return temp_df
+    else:
+        return athlete_df
+    
+def men_vs_women(df):
+    athlete_df = df.drop_duplicates(subset=['Name', 'region'])
+
+    men = athlete_df[athlete_df['Sex'] == 'M'].groupby('Year').count()['Name'].reset_index()
+    women = athlete_df[athlete_df['Sex'] == 'F'].groupby('Year').count()['Name'].reset_index()
+
+    final = men.merge(women, on='Year', how='left')
+    final.rename(columns={'Name_x': 'Male', 'Name_y': 'Female'}, inplace=True)
+
+    final.fillna(0, inplace=True)
+
+    return final

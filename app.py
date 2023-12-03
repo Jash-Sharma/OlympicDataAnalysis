@@ -6,6 +6,7 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import plotly.figure_factory as ff
 
 df = pd.read_csv('athlete_events.csv')
 region_df = pd.read_csv('noc_regions.csv') 
@@ -15,7 +16,7 @@ st.sidebar.title("Olympic Analysis upto 2016")
 st.sidebar.image('olympic.png')
 user_menu = st.sidebar.radio(
     'Select an option',
-    ('Medal Tally' , 'Overall Analysis','Country-wise Analysis')
+    ('Medal Tally','Overall Analysis','Country-wise Analysis','Athelete-wise Analysis')
 )
 
 #st.dataframe(df)
@@ -139,3 +140,56 @@ if user_menu == "Country-wise Analysis":
     st.title("Top 10 athletes of " + s_country)
     top10_df = helper.most_successful_countrywise(df,s_country)
     st.table(top10_df)
+
+if user_menu == 'Athelete-wise Analysis':
+    
+    athelete_df = df.drop_duplicates(subset=['Name','region'])
+    medal = athelete_df['Age'].dropna()
+    gold_medal = athelete_df[athelete_df['Medal'] == 'Gold']['Age'].dropna()
+    silver_medal = athelete_df[athelete_df['Medal'] == 'Silver']['Age'].dropna()
+    bronze_medal = athelete_df[athelete_df['Medal'] == 'Bronze']['Age'].dropna()
+
+    fig = ff.create_distplot([medal,gold_medal,silver_medal,bronze_medal],['Overall Age','Gold medalist','Silver medalist','Bronze medalist'],show_hist=False,show_rug=False)
+    fig.update_layout(autosize=False,width=1000,height=500)
+    st.title('Probability Distribution of medal winning odds against Age')
+    st.plotly_chart(fig)
+
+    famous_sports = ['Basketball', 'Judo', 'Football', 'Tug-Of-War',            'Athletics',
+                     'Swimming', 'Badminton', 'Sailing', 'Gymnastics',
+                     'Art Competitions', 'Handball', 'Weightlifting', 'Wrestling',
+                     'Water Polo', 'Hockey', 'Rowing', 'Fencing',
+                     'Shooting', 'Boxing', 'Taekwondo', 'Cycling', 'Diving', 'Canoeing',
+                     'Tennis', 'Golf', 'Softball', 'Archery',
+                     'Volleyball', 'Synchronized Swimming', 'Table Tennis', 'Baseball',
+                     'Rhythmic Gymnastics', 'Rugby Sevens',
+                     'Beach Volleyball', 'Triathlon', 'Rugby', 'Polo', 'Ice Hockey']
+    x = []
+    name = []
+    for sport in famous_sports:
+        temp = athelete_df[athelete_df['Sport'] == sport]
+        x.append(temp[(temp['Medal'] == 'Gold') | (temp['Medal'] == 'Silver') |(temp['Medal'] == 'Bronze')]['Age'].dropna())
+        name.append(sport)
+
+    fig = ff.create_distplot(x,name,show_hist=False,show_rug=False)
+    fig.update_layout(autosize=False,width=1000,height=500)
+    st.title('Probability Distribution of medal winning odds in each sport against Age')
+    st.plotly_chart(fig)
+
+    sport_list = df['Sport'].unique().tolist()
+    sport_list.sort()
+    sport_list.insert(0, 'Overall')
+
+    st.title('Height Vs Weight')
+    selected_sport = st.selectbox('Select a Sport', sport_list)
+    selected_gender = st.selectbox('Select a Gender', ['All','M','F'])
+
+    temp_df = helper.weight_v_height(df,selected_sport,selected_gender)
+    fig , ax = plt.subplots()
+    sns.scatterplot(x=temp_df['Weight'],y=temp_df['Height'],hue=temp_df['Medal'],style=temp_df['Sex'],s=30).set_xlabel('Weight in lbs')
+    st.pyplot(fig)
+
+    st.title("Men Vs Women Participation Over the Years")
+    final = helper.men_vs_women(df)
+    fig = px.line(final, x="Year", y=["Male", "Female"])
+    fig.update_layout(autosize=False, width=1000, height=600)
+    st.plotly_chart(fig)
